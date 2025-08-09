@@ -38,6 +38,12 @@ pipeline {
                 sh "npm install"
             }
         }
+        stage('OWASP FS SCAN') {
+            steps {
+                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'dp-check'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
         
             }
         }
@@ -61,7 +67,7 @@ pipeline {
                 </body>
                 </html>
             """,
-            to: 'provide_your_Email_id_here',
+            to: 'harishn662@gmail.com',
             mimeType: 'text/html',
             attachmentsPattern: 'trivy.txt'
         }
