@@ -38,10 +38,10 @@ pipeline {
                 sh "npm install"
             }
         }
-        stage('OWASP FS SCAN') {
+        
+        stage ("Build Docker Image") {
             steps {
-                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'dp-check'
-                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                sh "docker build -t amazon-prime ."
             }
         }
         
