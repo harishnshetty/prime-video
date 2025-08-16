@@ -54,60 +54,91 @@ pipeline {
                 sh "trivy fs . > trivy.txt"
             }
         }
-        stage ("Build Docker Image") {
-            steps {
-                sh "docker build -t amazon-prime ."
+        sstage("Build Docker Image") {
+    steps {
+        script {
+            // Define unique tag using BUILD_NUMBER
+            env.IMAGE_TAG = "harishnshetty/amazon-prime:${BUILD_NUMBER}"
+
+            // Optional: remove old local image if exists
+            sh "docker rmi -f amazon-prime ${env.IMAGE_TAG} || true"
+
+            // Build Docker image
+            sh "docker build -t amazon-prime ."
+        }
+    }
+}
+
+stage("Tag & Push to DockerHub") {
+    steps {
+        script {
+            withDockerRegistry(credentialsId: 'docker-cred') {
+                // Tag with unique IMAGE_TAG
+                sh "docker tag amazon-prime ${env.IMAGE_TAG}"
+
+                // Push unique tag
+                sh "docker push ${env.IMAGE_TAG}"
+
+                // Optional: also push latest if needed
+                sh "docker tag amazon-prime harishnshetty/amazon-prime:latest"
+                sh "docker push harishnshetty/amazon-prime:latest"
             }
         }
-        stage ("Tag & Push to DockerHub") {
-            steps {
-                script {
-                    withDockerRegistry(credentialsId: 'docker-cred') {
-                        sh "docker tag amazon-prime harishnshetty/amazon-prime:latest "
-                        sh "docker push harishnshetty/amazon-prime:latest "
-                    }
-                }
-            }
-        }
+    }
+}
+
         stage('Docker Scout Image') {
-            steps {
-                script{
-                   withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){
-                       sh 'docker-scout quickview harishnshetty/amazon-prime:latest'
-                       sh 'docker-scout cves harishnshetty/amazon-prime:latest'
-                       sh 'docker-scout recommendations harishnshetty/amazon-prime:latest'
-                   }
-                }
+    steps {
+        script {
+            withDockerRegistry(credentialsId: 'docker-cred') {
+                sh "docker-scout quickview ${env.IMAGE_TAG}"
+                sh "docker-scout cves ${env.IMAGE_TAG}"
+                sh "docker-scout recommendations ${env.IMAGE_TAG}"
             }
         }
-        stage ("Deploy to Conatiner") {
-            steps {
-                sh 'docker run -d --name amazon-prime -p 3000:3000 harishnshetty/amazon-prime:latest'
-            }
+    }
+}
+
+        stage("Deploy to Container") {
+    steps {
+        script {
+            // Remove old container if exists
+            sh "docker rm -f amazon-prime || true"
+
+            // Run new container
+            sh "docker run -d --name amazon-prime -p 3000:3000 ${env.IMAGE_TAG}"
         }
+    }
+}
+
     }
     post {
     always {
-        emailext attachLog: true,
-            subject: "'${currentBuild.result}'",
-            body: """
-                <html>
-                <body>
-                    <div style="background-color: #FFA07A; padding: 10px; margin-bottom: 10px;">
-                        <p style="color: white; font-weight: bold;">Project: ${env.JOB_NAME}</p>
-                    </div>
-                    <div style="background-color: #90EE90; padding: 10px; margin-bottom: 10px;">
-                        <p style="color: white; font-weight: bold;">Build Number: ${env.BUILD_NUMBER}</p>
-                    </div>
-                    <div style="background-color: #87CEEB; padding: 10px; margin-bottom: 10px;">
-                        <p style="color: white; font-weight: bold;">URL: ${env.BUILD_URL}</p>
-                    </div>
-                </body>
-                </html>
-            """,
-            to: 'provide_your_Email_id_here',
-            mimeType: 'text/html',
-            attachmentsPattern: 'trivy.txt'
+        script {
+            emailext(
+                attachLog: true,
+                subject: "Build Result: ${currentBuild.result}",
+                body: """
+                    <html>
+                    <body>
+                        <div style="background-color: #FFA07A; padding: 10px; margin-bottom: 10px;">
+                            <p style="color: white; font-weight: bold;">Project: ${env.JOB_NAME}</p>
+                        </div>
+                        <div style="background-color: #90EE90; padding: 10px; margin-bottom: 10px;">
+                            <p style="color: white; font-weight: bold;">Build Number: ${env.BUILD_NUMBER}</p>
+                        </div>
+                        <div style="background-color: #87CEEB; padding: 10px; margin-bottom: 10px;">
+                            <p style="color: white; font-weight: bold;">URL: <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a></p>
+                        </div>
+                    </body>
+                    </html>
+                """,
+                to: 'harishn662@gmail.com',
+                mimeType: 'text/html',
+                attachmentsPattern: 'trivy.txt'
+            )
         }
     }
+}
+
 }
