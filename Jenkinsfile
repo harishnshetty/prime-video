@@ -38,16 +38,49 @@ pipeline {
                 sh "npm install"
             }
         }
-        
+        stage('OWASP FS SCAN') {
+            steps {
+                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+        stage ("Trivy File Scan") {
+            steps {
+                sh "trivy fs . > trivy.txt"
+            }
+        }
         stage ("Build Docker Image") {
             steps {
                 sh "docker build -t amazon-prime ."
             }
         }
-        
+        stage ("Tag & Push to DockerHub") {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'docker-cred') {
+                        sh "docker tag amazon-prime harishnshetty/amazon-prime:latest "
+                        sh "docker push harishnshetty/amazon-prime:latest "
+                    }
+                }
             }
         }
-        
+        stage('Docker Scout Image') {
+            steps {
+                script{
+                   withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){
+                       sh 'docker-scout quickview harishnshetty/amazon-prime:latest'
+                       sh 'docker-scout cves harishnshetty/amazon-prime:latest'
+                       sh 'docker-scout recommendations harishnshetty/amazon-prime:latest'
+                   }
+                }
+            }
+        }
+        stage ("Deploy to Conatiner") {
+            steps {
+                sh 'docker run -d --name amazon-prime -p 3000:3000 harishnshetty/amazon-prime:latest'
+            }
+        }
+    }
     post {
     always {
         emailext attachLog: true,
@@ -67,9 +100,9 @@ pipeline {
                 </body>
                 </html>
             """,
-            to: 'harishn662@gmail.com',
+            to: 'provide_your_Email_id_here',
             mimeType: 'text/html',
             attachmentsPattern: 'trivy.txt'
         }
     }
-
+}
