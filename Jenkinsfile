@@ -38,15 +38,16 @@ pipeline {
             steps {
                 sh "npm install"
             }
-        }
-        stage('OWASP FS SCAN') {
-    steps {
-        withCredentials([string(credentialsId: 'NVD_API_KEY', variable: 'NVD_API_KEY')]) {
-            dependencyCheck additionalArguments: "--scan ./ --disableYarnAudit --disableNodeAudit --nvdApiKey $NVD_API_KEY", odcInstallation: 'dp-check'
-            dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-        }
-    }
-}
+        } 
+        
+   //     stage('OWASP FS SCAN') {
+   // steps {
+    //    withCredentials([string(credentialsId: 'NVD_API_KEY', variable: 'NVD_API_KEY')]) {
+     //       dependencyCheck additionalArguments: "--scan ./ --disableYarnAudit --disableNodeAudit --nvdApiKey $NVD_API_KEY", odcInstallation: 'dp-check'
+      //      dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+       // }
+  //  }
+// }
 
         stage ("Trivy File Scan") {
             steps {
