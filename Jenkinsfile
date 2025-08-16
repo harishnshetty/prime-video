@@ -90,20 +90,17 @@ stage("Tag & Push to DockerHub") {
         stage('Docker Scout Image') {
     steps {
         script {
-            withDockerRegistry(credentialsId: 'docker-cred') {
-                sh """
-                    mkdir -p /tmp/jenkins-docker-scout-cache
-                    chmod 777 /tmp/jenkins-docker-scout-cache
-                    export DOCKER_SCOUT_CACHE=/tmp/jenkins-docker-scout-cache
+            sh """
+                mkdir -p ${WORKSPACE}/docker-scout-cache
 
-                    docker-scout quickview ${env.IMAGE_TAG}
-                    docker-scout cves ${env.IMAGE_TAG}
-                    docker-scout recommendations ${env.IMAGE_TAG}
-                """
-            }
+                DOCKER_SCOUT_CACHE=${WORKSPACE}/docker-scout-cache docker-scout quickview ${env.IMAGE_TAG}
+                DOCKER_SCOUT_CACHE=${WORKSPACE}/docker-scout-cache docker-scout cves ${env.IMAGE_TAG}
+                DOCKER_SCOUT_CACHE=${WORKSPACE}/docker-scout-cache docker-scout recommendations ${env.IMAGE_TAG}
+            """
         }
     }
 }
+
 
 
         stage("Deploy to Container") {
