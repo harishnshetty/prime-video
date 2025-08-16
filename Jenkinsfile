@@ -54,7 +54,7 @@ pipeline {
                 sh "trivy fs . > trivy.txt"
             }
         }
-        sstage("Build Docker Image") {
+        stage("Build Docker Image") {
     steps {
         script {
             // Define unique tag using BUILD_NUMBER
