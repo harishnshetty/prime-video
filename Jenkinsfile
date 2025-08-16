@@ -6,6 +6,7 @@ pipeline {
     }
     environment {
         SCANNER_HOME=tool 'sonar-scanner'
+        NVD_API_KEY = credentials('NVD_API_KEY')
     }
     stages {
         stage ("clean workspace") {
@@ -29,7 +30,7 @@ pipeline {
         stage("quality gate"){
            steps {
                 script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token' 
+                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' 
                 }
             } 
         }
@@ -39,11 +40,14 @@ pipeline {
             }
         }
         stage('OWASP FS SCAN') {
-            steps {
-                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'dp-check'
-                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-            }
+    steps {
+        withCredentials([string(credentialsId: 'NVD_API_KEY', variable: 'NVD_API_KEY')]) {
+            dependencyCheck additionalArguments: "--scan ./ --disableYarnAudit --disableNodeAudit --nvdApiKey $NVD_API_KEY", odcInstallation: 'dp-check'
+            dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
         }
+    }
+}
+
         stage ("Trivy File Scan") {
             steps {
                 sh "trivy fs . > trivy.txt"
