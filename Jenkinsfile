@@ -87,19 +87,19 @@ stage("Tag & Push to DockerHub") {
     }
 }
 
-        stage('Docker Scout Image') {
-    steps {
-        script {
-            sh """
-                mkdir -p ${WORKSPACE}/docker-scout-cache
+//         stage('Docker Scout Image') {
+//     steps {
+//         script {
+//             sh """
+//                 mkdir -p ${WORKSPACE}/docker-scout-cache
 
-                DOCKER_SCOUT_CACHE=${WORKSPACE}/docker-scout-cache docker-scout quickview ${env.IMAGE_TAG}
-                DOCKER_SCOUT_CACHE=${WORKSPACE}/docker-scout-cache docker-scout cves ${env.IMAGE_TAG}
-                DOCKER_SCOUT_CACHE=${WORKSPACE}/docker-scout-cache docker-scout recommendations ${env.IMAGE_TAG}
-            """
-        }
-    }
-}
+//                 DOCKER_SCOUT_CACHE=${WORKSPACE}/docker-scout-cache docker-scout quickview ${env.IMAGE_TAG}
+//                 DOCKER_SCOUT_CACHE=${WORKSPACE}/docker-scout-cache docker-scout cves ${env.IMAGE_TAG}
+//                 DOCKER_SCOUT_CACHE=${WORKSPACE}/docker-scout-cache docker-scout recommendations ${env.IMAGE_TAG}
+//             """
+//         }
+//     }
+// }
 
 
 
