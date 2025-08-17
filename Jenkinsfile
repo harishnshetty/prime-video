@@ -114,28 +114,33 @@ pipeline {
         }
     }
 
-    post {
-        always {
+     post {
+		always {
             archiveArtifacts artifacts: 'trivy-report.*', fingerprint: true
 
-            emailext(
-                to: 'harishn662@gmail.com',
-                subject: "📢 Jenkins Build Report: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: """
-                    <html>
-                        <body style="font-family: Arial, sans-serif; line-height: 1.5;">
-                            <p>📌 <b>This is a Jenkins BINGO CICD pipeline status.</b></p>
-                            <p><b>Project:</b> ${env.JOB_NAME}</p>
-                            <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
-                            <p><b>Build Status:</b> ${currentBuild.currentResult}</p>
-                            <p><b>Started by:</b> ${BUILD_USER ?: "N/A"}</p>
-                            <p><b>Build URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-                        </body>
-                    </html>
-                """,
-                mimeType: 'text/html',
-                attachmentsPattern: 'trivy-report.*,trivyfs.txt,dependency-check-report.xml'
-            )
-        }
+		    emailext(
+		        to: 'harishn662@gmail.com',
+		        subject: "📢 Jenkins Build Report: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+		        body: """
+		            <html>
+		                <body style="font-family: Arial, sans-serif; line-height: 1.5;">
+		                    <p>📌 <b>This is a Jenkins BINGO CICD pipeline status.</b></p>
+		                    <p><b>Project:</b> ${env.JOB_NAME}</p>
+		                    <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
+		                    <p><b>Build Status:</b> ${env.buildStatus}</p>
+		                    <p><b>Started by:</b> ${env.buildUser}</p>
+		                    <p><b>Build URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+		                </body>
+		            </html>
+		        """,
+		        mimeType: 'text/html',
+		        attachmentsPattern: 'trivy-report.*,trivyfs.txt,dependency-check-report.xml'
+		    )
+		}
     }
+
 }
+
+
+
+
