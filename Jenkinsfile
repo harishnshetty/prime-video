@@ -93,8 +93,8 @@ pipeline {
         stage("Tag & Push to DockerHub") {
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'docker-cred', variable: 'DOCKER_TOKEN')]) {
-                        sh 'echo $DOCKER_TOKEN | docker login -u harishnshetty --password-stdin'
+                    withCredentials([string(credentialsId: 'docker-cred', variable: 'dockerpwd')]) {
+                        sh "docker login -u harishnshetty -p ${dockerpwd}"
                         sh "docker tag amazon-prime ${env.IMAGE_TAG}"
                         sh "docker push ${env.IMAGE_TAG}"
 
