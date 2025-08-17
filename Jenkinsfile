@@ -118,7 +118,7 @@ pipeline {
                     trivy image -f json -o trivy-report.json ${env.IMAGE_TAG}
 
                     # HTML report using built-in HTML format
-                    trivy image -f table-o trivy-report.txt ${env.IMAGE_TAG}
+                    trivy image -f table -o trivy-report.txt ${env.IMAGE_TAG}
 
                     # Fail build if HIGH/CRITICAL vulnerabilities found
                     # trivy image --exit-code 1 --severity HIGH,CRITICAL ${env.IMAGE_TAG} || true
