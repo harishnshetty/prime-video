@@ -141,6 +141,11 @@ pipeline {
 
      post {
 		always {
+            script {
+                env.buildStatus = currentBuild.currentResult ?: 'SUCCESS'
+                env.buildUser = currentBuild.rawBuild.getCause(hudson.model.Cause$UserIdCause)?.getUserId() ?: 'Unknown'
+            }   
+                        
 		    emailext(
 		        to: 'harishn662@gmail.com',
 		        subject: "📢 Jenkins Build Report: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
