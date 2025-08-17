@@ -62,7 +62,7 @@ pipeline {
                     --scan ./ 
                     --disableYarnAudit 
                     --disableNodeAudit 
-                    --nvdApiKey 66461f9e-56f3-49eb-89b5-46a61b58dc09
+                    --nvdApiKey 788b28b3-e0a8-4fcf-a6c7-a6c4b772d8a7
                     ''',
                 odcInstallation: 'dp-check'
 
