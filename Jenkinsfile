@@ -158,7 +158,8 @@ pipeline {
 		            </html>
 		        """,
 		        mimeType: 'text/html',
-		        attachmentsPattern: 'trivy-report.*,trivyfs.txt,dependency-check-report.xml'
+                attachmentsPattern: 'trivy-report.*,trivyfs.txt,dependency-check-report.xml'
+
 		    )
 		}
     }
