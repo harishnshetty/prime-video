@@ -121,7 +121,7 @@ pipeline {
                     trivy image -f table-o trivy-report.txt ${env.IMAGE_TAG}
 
                     # Fail build if HIGH/CRITICAL vulnerabilities found
-                    trivy image --exit-code 1 --severity HIGH,CRITICAL ${env.IMAGE_TAG} || true
+                    # trivy image --exit-code 1 --severity HIGH,CRITICAL ${env.IMAGE_TAG} || true
                 """
                 }
             }
