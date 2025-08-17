@@ -146,7 +146,7 @@ pipeline {
 		        body: """
 		            <html>
 		                <body style="font-family: Arial, sans-serif; line-height: 1.5;">
-		                    <p>📌 <b>This is a Jenkins BINGO CICD pipeline status.</b></p>
+		                    <p>📌 <b>This is a Jenkins Prime-Video CICD pipeline status.</b></p>
 		                    <p><b>Project:</b> ${env.JOB_NAME}</p>
 		                    <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
 		                    <p><b>Build Status:</b> ${env.buildStatus}</p>
