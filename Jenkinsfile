@@ -150,8 +150,8 @@ pipeline {
 		                    <p>📌 <b>This is a Jenkins Prime-Video CICD pipeline status.</b></p>
 		                    <p><b>Project:</b> ${env.JOB_NAME}</p>
 		                    <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
-		                    <p><b>Build Status:</b> ${buildStatus}</p>
-		                    <p><b>Started by:</b> ${buildUser}</p>
+		                    <p><b>Build Status:</b> ${env.buildStatus}</p>
+		                    <p><b>Started by:</b> ${env.buildUser}</p>
 		                    <p><b>Build URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
 		                </body>
 		            </html>
