@@ -55,6 +55,22 @@ pipeline {
             }
         }
 
+
+        stage("OWASP FS Scan") {
+            steps {
+                dependencyCheck additionalArguments: '''
+                    --scan ./ 
+                    --disableYarnAudit 
+                    --disableNodeAudit 
+                    --nvdApiKey 66461f9e-56f3-49eb-89b5-46a61b58dc09
+                    ''',
+                odcInstallation: 'dp-check'
+
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+
+
         stage("Trivy File Scan") {
             steps {
                 sh "trivy fs . > trivyfs.txt"
