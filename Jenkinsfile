@@ -6,7 +6,6 @@ pipeline {
     }
     environment {
         SCANNER_HOME=tool 'sonar-scanner'
-        NVD_API_KEY = credentials('NVD_API_KEY')
     }
     stages {
         stage ("clean workspace") {
@@ -40,18 +39,17 @@ pipeline {
             }
         } 
         
-   //     stage('OWASP FS SCAN') {
-   // steps {
-    //    withCredentials([string(credentialsId: 'NVD_API_KEY', variable: 'NVD_API_KEY')]) {
-     //       dependencyCheck additionalArguments: "--scan ./ --disableYarnAudit --disableNodeAudit --nvdApiKey $NVD_API_KEY", odcInstallation: 'dp-check'
-      //      dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-       // }
-  //  }
-// }
+       stage('OWASP FS SCAN') {
+   steps {
+       dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'dp-check'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+       }
+   }
+}
 
         stage ("Trivy File Scan") {
             steps {
-                sh "trivy fs . > trivy.txt"
+                sh "trivy fs . > trivyfs.txt"
             }
         }
         stage("Build Docker Image") {
@@ -101,6 +99,22 @@ stage("Tag & Push to DockerHub") {
 //     }
 // }
 
+stage('Trivy Scan Image') {
+    steps {
+        script {
+            sh """
+                echo '🔍 Running Trivy scan on ${env.IMAGE_TAG}'
+
+                # Generate reports
+                trivy image -f json -o trivy-report.json ${env.IMAGE_TAG}
+                trivy image -f template --template "@contrib/html.tpl" -o trivy-report.html ${env.IMAGE_TAG}
+
+                # Fail build if HIGH/CRITICAL found
+                trivy image --exit-code 1 --severity HIGH,CRITICAL ${env.IMAGE_TAG} || true
+            """
+        }
+    }
+}
 
 
         stage("Deploy to Container") {
@@ -118,31 +132,25 @@ stage("Tag & Push to DockerHub") {
     }
     post {
     always {
-        script {
-            emailext(
-                attachLog: true,
-                subject: "Build Result: ${currentBuild.result}",
-                body: """
-                    <html>
-                    <body>
-                        <div style="background-color: #FFA07A; padding: 10px; margin-bottom: 10px;">
-                            <p style="color: white; font-weight: bold;">Project: ${env.JOB_NAME}</p>
-                        </div>
-                        <div style="background-color: #90EE90; padding: 10px; margin-bottom: 10px;">
-                            <p style="color: white; font-weight: bold;">Build Number: ${env.BUILD_NUMBER}</p>
-                        </div>
-                        <div style="background-color: #87CEEB; padding: 10px; margin-bottom: 10px;">
-                            <p style="color: white; font-weight: bold;">URL: <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a></p>
-                        </div>
+        archiveArtifacts artifacts: 'trivy-report.*', fingerprint: true
+        emailext(
+            to: 'harishn662@gmail.com',
+            subject: "📢 Jenkins Build Report: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            body: """
+                <html>
+                    <body style="font-family: Arial, sans-serif; line-height: 1.5;">
+                        <p>📌 <b>This is a Jenkins BINGO CICD pipeline status.</b></p>
+                        <p><b>Project:</b> ${env.JOB_NAME}</p>
+                        <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
+                        <p><b>Build Status:</b> ${currentBuild.currentResult}</p>
+                        <p><b>Started by:</b> ${BUILD_USER ?: "N/A"}</p>
+                        <p><b>Build URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
                     </body>
-                    </html>
-                """,
-                to: 'harishn662@gmail.com',
-                mimeType: 'text/html',
-                attachmentsPattern: 'trivy.txt'
-            )
-        }
+                </html>
+            """,
+            mimeType: 'text/html',
+            attachmentsPattern: 'trivy-report.*,trivyfs.txt, dependency-check-report.xml'
+        )
     }
 }
 
-}
