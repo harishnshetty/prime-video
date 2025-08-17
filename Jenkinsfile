@@ -93,7 +93,8 @@ pipeline {
         stage("Tag & Push to DockerHub") {
             steps {
                 script {
-                    withDockerRegistry(credentialsId: 'docker-cred') {
+                    withCredentials([string(credentialsId: 'docker-cred', variable: 'dockerpwd')]) {
+                        sh "docker login -u harishnshetty -p ${dockerpwd}"
                         sh "docker tag amazon-prime ${env.IMAGE_TAG}"
                         sh "docker push ${env.IMAGE_TAG}"
 
@@ -104,6 +105,8 @@ pipeline {
                 }
             }
         }
+
+       
 
         stage("Trivy Scan Image") {
             steps {
