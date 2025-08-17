@@ -156,11 +156,10 @@ pipeline {
 		            </html>
 		        """,
 		        mimeType: 'text/html',
-		        attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
+		        attachmentsPattern: 'trivyfs.txt'
 		    )
 		}
     }
-
 }
 
 
