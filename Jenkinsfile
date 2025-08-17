@@ -140,7 +140,7 @@ pipeline {
 
      post {
 		always {
-            emailext(
+		    emailext(
 		        to: 'harishn662@gmail.com',
 		        subject: "📢 Jenkins Build Report: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
 		        body: """
@@ -156,8 +156,7 @@ pipeline {
 		            </html>
 		        """,
 		        mimeType: 'text/html',
-                attachmentsPattern: 'trivy-report.txt,trivy-report.json,trivyfs.txt,dependency-check-report.xml'
-
+		        attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
 		    )
 		}
     }
