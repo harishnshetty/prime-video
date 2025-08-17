@@ -112,16 +112,21 @@ pipeline {
             steps {
                 script {
                     sh """
-                        echo '🔍 Running Trivy scan on ${env.IMAGE_TAG}'
+                    echo '🔍 Running Trivy scan on ${env.IMAGE_TAG}'
 
-                        trivy image -f json -o trivy-report.json ${env.IMAGE_TAG}
-                        trivy image -f template --template "@contrib/html.tpl" -o trivy-report.html ${env.IMAGE_TAG}
+                    # JSON report
+                    trivy image -f json -o trivy-report.json ${env.IMAGE_TAG}
 
-                        trivy image --exit-code 1 --severity HIGH,CRITICAL ${env.IMAGE_TAG} || true
-                    """
+                    # HTML report using built-in HTML format
+                    trivy image -f html -o trivy-report.html ${env.IMAGE_TAG}
+
+                    # Fail build if HIGH/CRITICAL vulnerabilities found
+                    trivy image --exit-code 1 --severity HIGH,CRITICAL ${env.IMAGE_TAG} || true
+                """
                 }
             }
         }
+
 
         stage("Deploy to Container") {
             steps {
