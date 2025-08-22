@@ -19,7 +19,7 @@ pipeline {
 
         stage("Git Checkout") {
             steps {
-                git branch: 'main', url: 'https://github.com/harishnshetty/prime-video-DevSecOps.git'
+                git branch: 'main', url: 'https://github.com/harishnshetty/prime-video.git'
             }
         }
 
@@ -27,8 +27,8 @@ pipeline {
             steps {
                 withSonarQubeEnv('sonar-server') {
                     sh ''' $SCANNER_HOME/bin/sonar-scanner \
-                        -Dsonar.projectName=prime-video \
-                        -Dsonar.projectKey=prime-video '''
+                        -Dsonar.projectName=amazon-prime \
+                        -Dsonar.projectKey=amazon-prime '''
                 }
             }
         }
@@ -36,12 +36,9 @@ pipeline {
         stage("Quality Gate") {
             steps {
                 script {
-                    timeout(time: 3, unit: 'MINUTES') {
-                  
                     waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token'
                 }
             }
-        }
         }
 
         stage("Install NPM Dependencies") {
@@ -50,15 +47,24 @@ pipeline {
             }
         }
         
-       
+        // stage("OWASP FS Scan") {
+        //     steps {
+        //         dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit',
+        //                         odcInstallation: 'dp-check'
+        //         dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+        //     }
+        // }  
+
+        
+        // https://nvd.nist.gov/developers/request-an-api-key  [request an API key]
         stage("OWASP FS Scan") {
             steps {
                 dependencyCheck additionalArguments: '''
                     --scan ./ 
                     --disableYarnAudit 
                     --disableNodeAudit 
-                
-                   ''',
+                    --nvdApiKey 788b28b3-e0a8-4fcf-a6c7-a6c4b772d8a7  
+                    ''',
                 odcInstallation: 'dp-check'
 
                 dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
@@ -75,12 +81,12 @@ pipeline {
         stage("Build Docker Image") {
             steps {
                 script {
-                    env.IMAGE_TAG = "harishnshetty/prime-video:${BUILD_NUMBER}"
+                    env.IMAGE_TAG = "harishnshetty/amazon-prime:${BUILD_NUMBER}"
 
                     // Optional cleanup
-                    sh "docker rmi -f prime-video ${env.IMAGE_TAG} || true"
+                    sh "docker rmi -f amazon-prime ${env.IMAGE_TAG} || true"
 
-                    sh "docker build -t prime-video ."
+                    sh "docker build -t amazon-prime ."
                 }
             }
         }
@@ -90,12 +96,12 @@ pipeline {
                 script {
                     withCredentials([string(credentialsId: 'docker-cred', variable: 'dockerpwd')]) {
                         sh "docker login -u harishnshetty -p ${dockerpwd}"
-                        sh "docker tag prime-video ${env.IMAGE_TAG}"
+                        sh "docker tag amazon-prime ${env.IMAGE_TAG}"
                         sh "docker push ${env.IMAGE_TAG}"
 
                         // Also push latest
-                        sh "docker tag prime-video harishnshetty/prime-video:latest"
-                        sh "docker push harishnshetty/prime-video:latest"
+                        sh "docker tag amazon-prime harishnshetty/amazon-prime:latest"
+                        sh "docker push harishnshetty/amazon-prime:latest"
                     }
                 }
             }
@@ -126,14 +132,14 @@ pipeline {
         stage("Deploy to Container") {
             steps {
                 script {
-                    sh "docker rm -f prime-video || true"
-                    sh "docker run -d --name prime-video -p 80:80 ${env.IMAGE_TAG}"
+                    sh "docker rm -f amazon-prime || true"
+                    sh "docker run -d --name amazon-prime -p 3000:3000 ${env.IMAGE_TAG}"
                 }
             }
         }
     }
 
-      post {
+     post {
     always {
         script {
             def buildStatus = currentBuild.currentResult
@@ -142,7 +148,7 @@ pipeline {
             emailext (
                 subject: "Pipeline ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """
-                    <p>This is a Jenkins prime-video CICD pipeline status.</p>
+                    <p>This is a Jenkins Reddit CICD pipeline status.</p>
                     <p>Project: ${env.JOB_NAME}</p>
                     <p>Build Number: ${env.BUILD_NUMBER}</p>
                     <p>Build Status: ${buildStatus}</p>
@@ -158,7 +164,5 @@ pipeline {
     }
 }
 }
-
-
 
 

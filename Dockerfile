@@ -1,20 +1,31 @@
-# Use Node.js Alpine base image
-FROM node:alpine
+# ---------- Build Stage ----------
+FROM node:alpine AS build
 
-# Create and set the working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json to the working directory
-COPY package.json package-lock.json /app/
+# Copy dependency files
+COPY package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy the entire codebase to the working directory
-COPY . /app/
+# Copy rest of the code
+COPY . .
 
-# Expose the port your container app
-EXPOSE 3000    
+# Build optimized production build
+RUN npm run build
 
-# Define the command to start your application (replace "start" with the actual command to start your app)
-CMD ["npm", "start"]
+
+# ---------- Production Stage ----------
+FROM nginx:alpine
+
+# Copy build output to nginx html directory
+COPY --from=build /app/build /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
+# ---------- End of Dockerfile ----------
